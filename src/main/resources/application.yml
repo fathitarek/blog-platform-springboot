@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: blog-platform-springboot
+  profiles:
+    default: local
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/blog_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:blog_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:blog_password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  cache:
+    type: simple
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+  jackson:
+    time-zone: UTC
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  jwt:
+    issuer: ${JWT_ISSUER:blog-platform-springboot}
+    secret: ${JWT_SECRET:}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
+  cache:
+    redis-enabled: ${APP_CACHE_REDIS_ENABLED:false}
+
+logging:
+  level:
+    org.hibernate.SQL: info
+    org.hibernate.orm.jdbc.bind: info
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui

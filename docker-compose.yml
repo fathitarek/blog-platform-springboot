@@ -1,0 +1,73 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: blog-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-blog_platform}
+      MYSQL_USER: ${MYSQL_USER:-blog_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-blog_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: blog-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin:5.2-apache
+    container_name: blog-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 0
+    ports:
+      - "8081:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  blog-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blog-api
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-blog_platform}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-blog_user}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-blog_password}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      APP_CACHE_REDIS_ENABLED: true
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-long-32-plus-character-secret}
+      JWT_ISSUER: ${JWT_ISSUER:-blog-platform-springboot}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-120}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

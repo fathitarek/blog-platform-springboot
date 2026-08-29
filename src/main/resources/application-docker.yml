@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:blog_platform}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${MYSQL_USER:blog_user}
+    password: ${MYSQL_PASSWORD:blog_password}
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+  cache:
+    type: redis
+
+app:
+  cache:
+    redis-enabled: true
